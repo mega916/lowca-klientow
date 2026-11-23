@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Łowca Klientów B2B</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f766e">
+<style>
+:root{--g:#0f766e;--g2:#14b8a6;--bg:#f4f6f8;--c:#fff;--t:#1f2937;--m:#6b7280;--b:#e5e7eb;--r:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--t)}
+header{background:var(--g);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:19px}header p{margin:2px 0 0;font-size:13px;opacity:.85}
+nav{display:flex;overflow-x:auto;background:#fff;border-bottom:1px solid var(--b);position:sticky;top:0;z-index:5}
+nav button{flex:1;min-width:92px;padding:12px 8px;border:0;background:none;font:inherit;font-size:14px;color:var(--m);border-bottom:3px solid transparent;cursor:pointer}
+nav button.on{color:var(--g);border-color:var(--g);font-weight:600}
+main{max-width:860px;margin:0 auto;padding:14px}
+section{display:none}section.on{display:block}
+.card{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:8px;font:inherit;background:#fff}
+textarea{min-height:90px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+button.p,button.s{padding:11px 16px;border-radius:8px;border:0;font:inherit;font-weight:600;cursor:pointer;margin:10px 8px 0 0}
+button.p{background:var(--g);color:#fff}button.s{background:#e6f4f2;color:var(--g)}
+button.d{background:none;border:0;color:var(--r);cursor:pointer;font-size:13px}
+button:disabled{opacity:.5}
+.out{white-space:pre-wrap;background:#f9fafb;border:1px dashed var(--b);border-radius:8px;padding:12px;margin-top:10px;font-size:15px}
+.hint{font-size:13px;color:var(--m)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:#e6f4f2;color:var(--g);margin-right:4px}
+.lead{border-left:4px solid var(--g2)}
+.lead h3{margin:0 0 4px;font-size:16px}
+.due{color:var(--r);font-weight:600}
+a{color:var(--g)}
+.warn{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px;font-size:13px;margin-top:8px}
+.lock{position:fixed;inset:0;background:var(--g);z-index:99;display:none;align-items:center;justify-content:center;padding:20px}
+.lock .box{background:#fff;border-radius:14px;padding:22px;width:100%;max-width:340px;text-align:center}
+.lock input{text-align:center;font-size:24px;letter-spacing:8px;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="lock" id="lock"><div class="box"><h2 id="lt" style="margin:0">🔒 Łowca Klientów</h2><p class="hint" id="lh"></p>
+<input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="••••">
+<input id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="powtórz" style="display:none">
+<div id="le" style="color:var(--r);font-size:14px;min-height:20px"></div>
+<button class="p" id="lgo" style="width:100%;margin:6px 0 0">Wejdź</button>
+<button class="d" id="lforgot" style="margin-top:12px">Zapomniałem PIN (usuwa dane)</button></div></div>
+<header><h1>🎯 Łowca Klientów B2B</h1><p>Profil klienta → lista firm → wiadomość → follow-upy</p></header>
+<nav id="nav">
+ <button data-t="icp" class="on">1. Profil</button>
+ <button data-t="find">2. Szukaj</button>
+ <button data-t="msg">3. Wiadomość</button>
+ <button data-t="crm">4. Leady</button>
+ <button data-t="set">⚙️</button>
+</nav>
+<main>
+
+<section id="icp" class="on">
+ <div class="card">
+  <b>Kogo szukasz?</b>
+  <p class="hint">Wypełnij raz. Reszta aplikacji korzysta z tych danych.</p>
+  <label>Co sprzedajesz (usługa/produkt)</label>
+  <input id="offer" placeholder="np. montaż instalacji ze stali nierdzewnej dla mleczarni">
+  <div class="row">
+   <div><label>Twoja firma</label><input id="company" placeholder="np. nazwa Twojej firmy"></div>
+   <div><label>Twoje imię</label><input id="me" placeholder="np. Piotr"></div>
+  </div>
+  <label>Branże klientów (po przecinku)</label>
+  <input id="industries" placeholder="np. mleczarnie, browary, zakłady farmaceutyczne">
+  <div class="row">
+   <div><label>Region</label><input id="region" placeholder="np. Śląsk, cała Polska"></div>
+   <div><label>Wielkość firmy</label>
+    <select id="size"><option>1–10 osób</option><option selected>10–50 osób</option><option>50–250 osób</option><option>250+ osób</option></select></div>
+  </div>
+  <label>Kto decyduje o zakupie (stanowiska)</label>
+  <input id="roles" placeholder="np. dyrektor techniczny, kierownik utrzymania ruchu, właściciel">
+  <label>Jaki problem klienta rozwiązujesz</label>
+  <textarea id="pain" placeholder="np. przestoje przez nieszczelne instalacje, wymagania EHEDG/HACCP"></textarea>
+  <label>Twój dowód / atut (1–2 zdania)</label>
+  <textarea id="proof" placeholder="np. realizacje dla branży spożywczej, spawanie orbitalne TIG"></textarea>
+  <button class="p" id="saveIcp">Zapisz profil</button>
+  <button class="s" id="aiIcp">✨ Dopracuj z AI</button>
+  <div id="icpOut" class="out" style="display:none"></div>
+ </div>
+</section>
+
+<section id="find">
+ <div class="card">
+  <b>Gotowe wyszukiwania</b>
+  <p class="hint">Kliknij — otworzy się wyszukiwarka z gotowym zapytaniem. Znalezione firmy dodaj do Leadów.</p>
+  <div id="links"></div>
+ </div>
+ <div class="card">
+  <b>✨ Agent szuka firm (AI + internet)</b>
+  <p class="hint">Wymaga klucza API w ⚙️. Zwraca firmy z uzasadnieniem — zawsze sprawdź je sam przed kontaktem.</p>
+  <label>Ile firm</label>
+  <select id="n"><option>5</option><option selected>8</option><option>12</option></select>
+  <button class="p" id="aiFind">Znajdź firmy</button>
+  <div id="found"></div>
+ </div>
+ <div class="card">
+  <b>Dodaj ręcznie</b>
+  <div class="row">
+   <div><label>Firma</label><input id="mName"></div>
+   <div><label>Osoba / stanowisko</label><input id="mPerson"></div>
+   <div><label>E-mail / telefon / link</label><input id="mContact"></div>
+   <div><label>Strona www</label><input id="mWww"></div>
+  </div>
+  <label>Dlaczego pasuje (1 zdanie)</label><input id="mWhy">
+  <button class="p" id="addLead">Dodaj do leadów</button>
+ </div>
+</section>
+
+<section id="msg">
+ <div class="card">
+  <label>Lead</label><select id="msgLead"></select>
+  <div class="row">
+   <div><label>Kanał</label><select id="chan"><option value="mail">E-mail</option><option value="li">LinkedIn (krótka)</option><option value="tel">Skrypt telefonu</option></select></div>
+   <div><label>Krok</label><select id="step"><option value="0">Pierwsza wiadomość</option><option value="1">Follow-up 1 (po 3 dniach)</option><option value="2">Follow-up 2 (po 7 dniach)</option><option value="3">Pożegnalna (po 14 dniach)</option></select></div>
+  </div>
+  <button class="p" id="mkTpl">Szablon (offline)</button>
+  <button class="s" id="mkAi">✨ Napisz z AI</button>
+  <div id="msgOut" class="out" style="display:none"></div>
+  <button class="s" id="copy" style="display:none">Kopiuj</button>
+  <button class="s" id="markSent" style="display:none">Oznacz jako wysłane</button>
+ </div>
+</section>
+
+<section id="crm">
+ <div class="card">
+  <select id="filter"><option value="all">Wszystkie</option><option value="due">Do follow-upu dziś</option><option value="nowy">Nowe</option><option value="wyslano">Wysłano</option><option value="odp">Odpowiedział</option><option value="spotkanie">Spotkanie</option><option value="klient">Klient</option><option value="odrzut">Odrzucone</option></select>
+  <button class="s" id="csv">Eksport CSV</button>
+ </div>
+ <div id="leads"></div>
+</section>
+
+<section id="set">
+ <div class="card">
+  <b>Klucz API Anthropic (opcjonalnie)</b>
+  <p class="hint">Włącza przyciski ✨. Klucz zostaje tylko w tej przeglądarce (localStorage), nigdzie go nie wysyłamy poza api.anthropic.com.</p>
+  <input id="key" type="password" placeholder="sk-ant-...">
+  <label>Model</label><input id="model" value="claude-sonnet-5-5">
+  <button class="p" id="saveKey">Zapisz</button>
+  <div class="warn">⚠️ Nie używaj tej strony publicznie z kluczem na cudzym urządzeniu. Ustaw limit wydatków w konsoli Anthropic.</div>
+ </div>
+ <div class="card">
+  <b>Zasady kontaktu (RODO / UKE)</b>
+  <p class="hint">Pierwszy mail do firmy (adres typu biuro@, kontakt@ lub imienny służbowy) jest dopuszczalny jako oferta B2B, ale: podaj kim jesteś i skąd masz dane, daj prosty sposób rezygnacji, nie wysyłaj masowo tej samej treści, nie pisz do osób, które odmówiły. Telefon do firmy — zwykle OK, do osoby prywatnej bez zgody — nie. W razie wątpliwości zapytaj prawnika.</p>
+ </div>
+ <div class="card">
+  <b>Blokada PIN</b>
+  <p class="hint">PIN chroni przed przypadkowym wejściem na telefonie. To nie szyfrowanie — ktoś z dostępem do przeglądarki i wiedzą techniczną może odczytać dane.</p>
+  <button class="p" id="lockNow">Zablokuj teraz</button><button class="s" id="chPin">Zmień PIN</button>
+ </div>
+ <div class="card">
+  <button class="d" id="wipe">Usuń wszystkie dane z tej przeglądarki</button>
+ </div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const DEF={offer:'podwykonawstwo spawalnicze i montażowe instalacji oraz konstrukcji ze stali nierdzewnej (TIG, orbitalne) dla branży spożywczej, mleczarskiej, piwowarskiej i farmaceutycznej',company:'',me:'Piotr',industries:'generalni wykonawcy instalacji procesowych, producenci linii technologicznych dla przemysłu spożywczego, firmy instalacyjne stal nierdzewna, wykonawcy instalacji dla browarów i mleczarni',region:'cała Polska',size:'10–50 osób',roles:'kierownik kontraktu, kierownik projektu, kierownik budowy, dyrektor ds. zakupów, właściciel',pain:'brak wolnych, wykwalifikowanych spawaczy na szczyt zleceń, presja terminów na budowie, wymagana dokumentacja spawalnicza i jakość zgodna z EHEDG/HACCP',proof:'wykonujemy spawanie i montaż rurociągów oraz konstrukcji ze stali nierdzewnej (304/316L, duplex) jako podwykonawca, z dokumentacją i w terminie'};
+let icp=S.get('icp',null);if(!icp){icp={...DEF};S.set('icp',icp)}
+let leads=S.get('leads',[]);
+const ICPF=['offer','company','me','industries','region','size','roles','pain','proof'];
+const STAT={nowy:'Nowy',wyslano:'Wysłano',odp:'Odpowiedział',spotkanie:'Spotkanie',klient:'Klient',odrzut:'Odrzucony'};
+const GAPS=[3,7,14];
+
+// tabs
+$('nav').onclick=e=>{const t=e.target.dataset.t;if(!t)return;
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+ document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===t));
+ if(t==='find')renderLinks();if(t==='msg')fillLeadSel();if(t==='crm')renderLeads();window.scrollTo(0,0)};
+
+function readIcp(){ICPF.forEach(f=>icp[f]=$(f).value.trim());S.set('icp',icp)}
+ICPF.forEach(f=>{if(icp[f])$(f).value=icp[f]});
+$('saveIcp').onclick=()=>{readIcp();show('icpOut','✅ Zapisane. Przejdź do „2. Szukaj”.')};
+function show(id,t){const o=$(id);o.style.display='block';o.textContent=t}
+const need=()=>{readIcp();if(!icp.offer||!icp.industries){alert('Uzupełnij co sprzedajesz i branże.');return false}return true};
+
+// links
+function renderLinks(){readIcp();const inds=(icp.industries||'').split(',').map(s=>s.trim()).filter(Boolean);
+ const roles=(icp.roles||'').split(',').map(s=>s.trim()).filter(Boolean);const reg=icp.region||'Polska';
+ let h='';if(!inds.length){$('links').innerHTML='<p class="hint">Najpierw uzupełnij profil.</p>';return}
+ inds.forEach(ind=>{
+  const g=q=>'https://www.google.com/search?q='+encodeURIComponent(q);
+  const maps='https://www.google.com/maps/search/'+encodeURIComponent(ind+' '+reg);
+  const li='https://www.google.com/search?q='+encodeURIComponent('site:linkedin.com/in '+(roles[0]||'dyrektor')+' '+ind+' '+reg);
+  const li2='https://www.linkedin.com/search/results/companies/?keywords='+encodeURIComponent(ind+' '+reg);
+  h+=`<div class="card"><span class="tag">${esc(ind)}</span><br>
+  <a target="_blank" rel="noopener" href="${maps}">📍 Mapy Google</a> ·
+  <a target="_blank" rel="noopener" href="${g('lista firm '+ind+' '+reg)}">🔎 Lista firm</a> ·
+  <a target="_blank" rel="noopener" href="${g(ind+' '+reg+' przetarg OR inwestycja OR rozbudowa')}">🏗️ Inwestycje/przetargi</a> ·
+  <a target="_blank" rel="noopener" href="${li}">👤 Decydenci (LinkedIn)</a> ·
+  <a target="_blank" rel="noopener" href="${li2}">🏢 Firmy LinkedIn</a> ·
+  <a target="_blank" rel="noopener" href="${g(ind+' '+reg+' site:aleo.com OR site:panoramafirm.pl')}">📒 Aleo/Panorama Firm</a> ·
+  <a target="_blank" rel="noopener" href="${g(ind+' '+reg+' nowa fabryka OR zatrudniamy OR rozbudowa zakładu')}">📈 Firmy w ekspansji</a></div>`});
+ $('links').innerHTML=h}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// leads
+function addLead(l){leads.unshift({id:Date.now()+Math.random(),status:'nowy',step:0,last:null,note:'',...l});S.set('leads',leads)}
+$('addLead').onclick=()=>{const name=$('mName').value.trim();if(!name)return alert('Podaj nazwę firmy');
+ addLead({name,person:$('mPerson').value.trim(),contact:$('mContact').value.trim(),www:$('mWww').value.trim(),why:$('mWhy').value.trim()});
+ ['mName','mPerson','mContact','mWww','mWhy'].forEach(i=>$(i).value='');alert('Dodano ✅')};
+const dueOf=l=>{if(l.status!=='wyslano'||!l.last||l.step>3)return null;const gap=GAPS[l.step-1];if(gap==null)return null;
+ return new Date(new Date(l.last).getTime()+gap*864e5)};
+const isDue=l=>{const d=dueOf(l);return d&&d<=new Date()};
+function renderLeads(){const f=$('filter').value;
+ const L=leads.filter(l=>f==='all'||(f==='due'?isDue(l):l.status===f));
+ $('leads').innerHTML=L.length?L.map(l=>{const d=dueOf(l);
+  return `<div class="card lead" data-id="${l.id}"><h3>${esc(l.name)}</h3>
+  <div class="hint">${esc(l.person)} ${l.contact?'· '+esc(l.contact):''} ${l.www?'· <a target="_blank" rel="noopener" href="'+esc(/^https?:/.test(l.www)?l.www:'https://'+l.www)+'">www</a>':''}</div>
+  ${l.why?'<div>'+esc(l.why)+'</div>':''}
+  <div style="margin:6px 0"><span class="tag">${STAT[l.status]}</span> <span class="hint">krok ${l.step}/4</span>
+  ${d?`<span class="${isDue(l)?'due':'hint'}"> · follow-up: ${d.toLocaleDateString('pl-PL')}</span>`:''}</div>
+  <select data-a="st">${Object.entries(STAT).map(([k,v])=>`<option value="${k}" ${k===l.status?'selected':''}>${v}</option>`).join('')}</select>
+  <input data-a="note" placeholder="Notatka" value="${esc(l.note)}" style="margin-top:6px">
+  <button class="s" data-a="wr">✉️ Napisz</button><button class="d" data-a="del">Usuń</button></div>`}).join(''):'<p class="hint">Brak leadów w tym widoku.</p>'}
+$('filter').onchange=renderLeads;
+$('leads').onchange=e=>{const c=e.target.closest('.lead');if(!c)return;const l=leads.find(x=>x.id==c.dataset.id);
+ if(e.target.dataset.a==='st'){l.status=e.target.value}if(e.target.dataset.a==='note'){l.note=e.target.value}S.set('leads',leads);renderLeads()};
+$('leads').onclick=e=>{const c=e.target.closest('.lead');if(!c)return;const l=leads.find(x=>x.id==c.dataset.id);const a=e.target.dataset.a;
+ if(a==='del'&&confirm('Usunąć lead?')){leads=leads.filter(x=>x!==l);S.set('leads',leads);renderLeads()}
+ if(a==='wr'){document.querySelector('[data-t=msg]').click();$('msgLead').value=l.id;$('step').value=Math.min(l.step,3)}};
+$('csv').onclick=()=>{const rows=[['Firma','Osoba','Kontakt','WWW','Dlaczego','Status','Krok','Ostatni kontakt','Notatka'],...leads.map(l=>[l.name,l.person,l.contact,l.www,l.why,STAT[l.status],l.step,l.last||'',l.note])];
+ const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='leady.csv';a.click()};
+
+// messages
+function fillLeadSel(){const v=$('msgLead').value;$('msgLead').innerHTML=leads.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')||'<option value="">— najpierw dodaj lead —</option>';if(v)$('msgLead').value=v}
+const curLead=()=>leads.find(l=>l.id==$('msgLead').value);
+function tpl(l,chan,step){readIcp();const me=icp.me||'[Twoje imię]',co=icp.company||'[firma]';const hi=l.person?`Dzień dobry ${l.person.split(/[,(]/)[0].trim()},`:'Dzień dobry,';
+ const why=l.why?`Zauważyłem, że ${l.name} ${l.why.replace(/^\W+/,'').replace(/\.$/,'')}. `:`Piszę do ${l.name}, bo działacie w branży, z którą na co dzień pracujemy. `;
+ const off=icp.offer||'[oferta]',pain=icp.pain?` Pomagamy rozwiązać problem: ${icp.pain.replace(/\.$/,'')}.`:'',pr=icp.proof?` ${icp.proof.replace(/\.?$/,'.')}`:'';
+ const sign=`\n\nPozdrawiam,\n${me}${icp.company?'\n'+co:''}`;
+ const optout='\n\n(Jeśli temat nie jest dla Państwa aktualny, wystarczy krótka odpowiedź „nie” — nie będę więcej pisać.)';
+ if(chan==='tel')return ['Otwarcie: „Dzień dobry, z tej strony '+me+' z '+co+'. Dzwonię w sprawie: '+off+'. Czy rozmawiam z osobą, która o tym decyduje? Zajmę 30 sekund.”\nPytanie: „Jak dziś rozwiązujecie '+(icp.pain||'ten temat')+'?”\nCel: umówić 15 minut lub wysłać krótką ofertę mailem.','Nawiązanie: „Dzwonię w związku z moją wiadomością z '+(l.last?new Date(l.last).toLocaleDateString('pl-PL'):'zeszłego tygodnia')+'. Czy zdążył/a Pan/Pani rzucić okiem?”','Nawiązanie: „Ostatnia próba kontaktu w sprawie: '+off+'. Czy to w ogóle temat dla Państwa?”','Zamknięcie: „Rozumiem, że to nie ten moment. Czy mogę odezwać się za kwartał?”'][step];
+ if(chan==='li'){return [`${hi} ${why}${off}.${pain} Czy mogę wysłać krótką propozycję?`,`${hi} wracam do mojej wiadomości — czy temat „${off}” jest u Państwa aktualny?`,`Jeszcze raz krótko: ${off}. Mogę podesłać 1 stronę z przykładem realizacji. Dać znać?`,`Nie będę już przeszkadzać. Gdyby temat wrócił — zapraszam do kontaktu. Powodzenia!`][step]}
+ return [`Temat: ${off} dla ${l.name}\n\n${hi}\n\n${why}Zajmuję się: ${off}.${pain}${pr}\n\nCzy mogę wysłać krótką propozycję albo umówić 15 minut rozmowy w tym tygodniu?${sign}${optout}`,
+ `Temat: Re: ${off} dla ${l.name}\n\n${hi}\n\nwracam do mojej wiadomości sprzed kilku dni. Jedno zdanie: ${off}.${pain}\n\nCzy jest sens porozmawiać?${sign}`,
+ `Temat: Przykład realizacji — ${l.name}\n\n${hi}\n\nrzadko dopytuję drugi raz, ale uważam, że to może pasować. ${icp.proof||''}\n\nMogę przesłać 1-stronicowy opis podobnej realizacji — chcą Państwo?${sign}${optout}`,
+ `Temat: Zamykam temat\n\n${hi}\n\nnie chcę zasypywać skrzynki, więc to moja ostatnia wiadomość. Jeśli ${off} wróci na listę priorytetów, wystarczy odpisać.${sign}`][step]}
+$('mkTpl').onclick=()=>{const l=curLead();if(!l)return alert('Dodaj lead');showMsg(tpl(l,$('chan').value,+$('step').value))};
+function showMsg(t){show('msgOut',t);['copy','markSent'].forEach(i=>$(i).style.display='inline-block')}
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('msgOut').textContent);$('copy').textContent='Skopiowano ✅'}catch(e){alert('Zaznacz tekst i skopiuj ręcznie')}setTimeout(()=>$('copy').textContent='Kopiuj',1500)};
+$('markSent').onclick=()=>{const l=curLead();if(!l)return;const st=+$('step').value;l.status='wyslano';l.step=st+1;l.last=new Date().toISOString();S.set('leads',leads);alert('Zapisane. Następny krok zaplanowany ✅')};
+
+// AI
+const cfg=()=>S.get('cfg',{key:'',model:'claude-sonnet-5-5'});
+$('key').value=cfg().key||'';$('model').value=cfg().model||'claude-sonnet-5-5';
+$('saveKey').onclick=()=>{S.set('cfg',{key:$('key').value.trim(),model:$('model').value.trim()||'claude-sonnet-5-5'});alert('Zapisane')};
+async function claude(prompt,web){const c=cfg();if(!c.key){alert('Dodaj klucz API w ⚙️');throw new Error('nokey')}
+ const body={model:c.model,max_tokens:3000,messages:[{role:'user',content:prompt}]};
+ if(web)body.tools=[{type:'web_search_20250305',name:'web_search',max_uses:6}];
+ const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+ const j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+ return j.content.filter(b=>b.type==='text').map(b=>b.text).join('\n')}
+const icpText=()=>ICPF.map(f=>`${f}: ${icp[f]||'-'}`).join('\n');
+function busy(btn,on){btn.disabled=on;if(on){btn.dataset.t=btn.textContent;btn.textContent='Pracuję…'}else btn.textContent=btn.dataset.t}
+$('aiIcp').onclick=async()=>{if(!need())return;busy($('aiIcp'),true);try{
+ show('icpOut',await claude(`Jesteś doradcą sprzedaży B2B. Na podstawie danych sprzedawcy napisz po polsku, krótko i konkretnie: 1) idealny profil klienta (5 punktów), 2) 3 sygnały, że firma potrzebuje oferty teraz, 3) 5 pytań kwalifikujących, 4) 3 typowe obiekcje i odpowiedzi, 5) 5 dodatkowych branż do rozważenia. Bez lania wody.\n\n${icpText()}`))}catch(e){if(e.message!=='nokey')show('icpOut','Błąd: '+e.message)}busy($('aiIcp'),false)};
+$('aiFind').onclick=async()=>{if(!need())return;busy($('aiFind'),true);$('found').innerHTML='';try{
+ const t=await claude(`Znajdź w internecie ${$('n').value} REALNYCH firm w Polsce pasujących do profilu klienta poniżej. Używaj wyszukiwarki. Nie zmyślaj: jeśli czegoś nie znalazłeś, zostaw puste. Zwróć WYŁĄCZNIE tablicę JSON obiektów z polami: name, www, person (stanowisko decydenta, jeśli znane), contact (publiczny e-mail/telefon ze strony firmy), why (1 zdanie: dlaczego pasuje, z faktem ze strony). Bez markdown.\n\n${icpText()}`,true);
+ const m=t.match(/\[[\s\S]*\]/);const arr=JSON.parse(m?m[0]:t);window._found=arr;
+ $('found').innerHTML='<p class="hint">Sprawdź każdą firmę zanim dodasz.</p>'+arr.map((x,i)=>`<div class="card lead"><h3>${esc(x.name)}</h3><div class="hint">${esc(x.www)} ${esc(x.contact||'')}</div><div>${esc(x.why||'')}</div><button class="s" data-i="${i}">+ Dodaj</button></div>`).join('')}catch(e){if(e.message!=='nokey')$('found').innerHTML='<div class="warn">Nie udało się: '+esc(e.message)+'</div>'}busy($('aiFind'),false)};
+$('found').onclick=e=>{const i=e.target.dataset.i;if(i==null)return;const x=window._found[i];addLead({name:x.name||'?',person:x.person||'',contact:x.contact||'',www:x.www||'',why:x.why||''});e.target.textContent='✅ Dodano';e.target.disabled=true};
+$('mkAi').onclick=async()=>{const l=curLead();if(!l)return alert('Dodaj lead');if(!need())return;busy($('mkAi'),true);try{
+ const ch={mail:'e-mail (z tematem)',li:'wiadomość LinkedIn do 300 znaków',tel:'skrypt rozmowy telefonicznej (30 sekund otwarcia + 2 pytania)'}[$('chan').value];
+ const st=['pierwsza wiadomość','follow-up 1','follow-up 2 (dodaj wartość, np. przykład)','krótka wiadomość pożegnalna'][+$('step').value];
+ showMsg(await claude(`Napisz po polsku: ${ch}, etap: ${st}. Do firmy: ${l.name}; osoba: ${l.person||'nieznana'}; dlaczego pasuje: ${l.why||'brak'}; strona: ${l.www||'brak'}.\nZasady: maks. 120 słów, jeden konkretny problem odbiorcy, zero pustych komplementów i sztampy ("w dzisiejszych czasach"), jedno proste pytanie na końcu, uczciwa informacja kim jestem, w mailu 1 zdanie jak zrezygnować z kontaktu. Nie wymyślaj faktów o firmie.\nSprzedawca:\n${icpText()}\nZwróć samą treść.`))}catch(e){if(e.message!=='nokey')show('msgOut','Błąd: '+e.message)}busy($('mkAi'),false)};
+$('wipe').onclick=()=>{if(confirm('Na pewno usunąć profil, leady i klucz?')){localStorage.clear();location.reload()}};
+
+// PIN
+async function hp(p){const salt='lowca-b2b-v1';try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(salt+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(const c of salt+p)h=((h<<5)+h+c.charCodeAt(0))|0;return 'f'+h}}
+const lock=$('lock');let fails=0,unlocked=false;
+function lockUi(){const has=!!S.get('pinh',null);lock.style.display='flex';$('pin').value='';$('pin2').value='';$('le').textContent='';
+ $('pin2').style.display=has?'none':'block';$('lforgot').style.display=has?'inline':'none';
+ $('lh').textContent=has?'Wpisz PIN':'Ustaw PIN (4–8 cyfr), który będzie chronił dostęp';$('lgo').textContent=has?'Wejdź':'Ustaw PIN';setTimeout(()=>$('pin').focus(),50)}
+$('lgo').onclick=async()=>{const p=$('pin').value.trim(),has=S.get('pinh',null);
+ if(!/^\d{4,8}$/.test(p)){$('le').textContent='PIN: 4–8 cyfr';return}
+ if(!has){if(p!==$('pin2').value.trim()){$('le').textContent='PIN-y się różnią';return}S.set('pinh',await hp(p));lock.style.display='none';return}
+ if(await hp(p)===has){fails=0;lock.style.display='none';return}
+ fails++;$('le').textContent='Zły PIN';if(fails>=3){$('lgo').disabled=true;let t=Math.min(60,fails*5);const iv=setInterval(()=>{$('le').textContent='Odczekaj '+t+' s';if(--t<0){clearInterval(iv);$('lgo').disabled=false;$('le').textContent=''}},1000)}$('pin').value=''};
+$('pin').onkeydown=$('pin2').onkeydown=e=>{if(e.key==='Enter')$('lgo').click()};
+$('lforgot').onclick=()=>{if(confirm('To usunie profil, leady i klucz API z tej przeglądarki. Kontynuować?')){localStorage.clear();location.reload()}};
+$('chPin').onclick=()=>{S.set('pinh',null);lockUi()};
+$('lockNow').onclick=lockUi;
+lockUi();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
