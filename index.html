@@ -94,7 +94,7 @@ a{color:var(--g)}
  </div>
  <div class="card">
   <b>✨ Agent szuka firm (AI + internet)</b>
-  <p class="hint">Wymaga klucza API w ⚙️. Zwraca firmy z uzasadnieniem — zawsze sprawdź je sam przed kontaktem.</p>
+  <p class="hint">Tylko z kluczem Anthropic (płatny) w ⚙️. Z darmowym Gemini użyj linków powyżej. Zwraca firmy z uzasadnieniem — zawsze sprawdź je sam przed kontaktem.</p>
   <label>Ile firm</label>
   <select id="n"><option>5</option><option selected>8</option><option>12</option></select>
   <button class="p" id="aiFind">Znajdź firmy</button>
@@ -138,12 +138,16 @@ a{color:var(--g)}
 
 <section id="set">
  <div class="card">
-  <b>Klucz API Anthropic (opcjonalnie)</b>
-  <p class="hint">Włącza przyciski ✨. Klucz zostaje tylko w tej przeglądarce (localStorage), nigdzie go nie wysyłamy poza api.anthropic.com.</p>
-  <input id="key" type="password" placeholder="sk-ant-...">
-  <label>Model</label><input id="model" value="claude-sonnet-5-5">
+  <b>AI (opcjonalnie)</b>
+  <p class="hint">Włącza przyciski ✨. Klucz zostaje tylko w tej przeglądarce (localStorage).</p>
+  <label>Dostawca</label>
+  <select id="prov"><option value="gemini">Google Gemini — darmowy (pisanie wiadomości, profil)</option><option value="anthropic">Anthropic Claude — płatny (+ szukanie firm w internecie)</option></select>
+  <p class="hint" id="provHint"></p>
+  <label>Klucz API</label>
+  <input id="key" type="password" placeholder="wklej klucz">
+  <label>Model</label><input id="model">
   <button class="p" id="saveKey">Zapisz</button>
-  <div class="warn">⚠️ Nie używaj tej strony publicznie z kluczem na cudzym urządzeniu. Ustaw limit wydatków w konsoli Anthropic.</div>
+  <div class="warn">⚠️ Nie wpisuj klucza na cudzym urządzeniu. W darmowym Gemini dane wysyłane do AI mogą służyć Google do ulepszania produktów — nie wklejaj tam poufnych danych klientów.</div>
  </div>
  <div class="card">
   <b>Zasady kontaktu (RODO / UKE)</b>
@@ -251,10 +255,19 @@ $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('msgOut').
 $('markSent').onclick=()=>{const l=curLead();if(!l)return;const st=+$('step').value;l.status='wyslano';l.step=st+1;l.last=new Date().toISOString();S.set('leads',leads);alert('Zapisane. Następny krok zaplanowany ✅')};
 
 // AI
-const cfg=()=>S.get('cfg',{key:'',model:'claude-sonnet-5-5'});
-$('key').value=cfg().key||'';$('model').value=cfg().model||'claude-sonnet-5-5';
-$('saveKey').onclick=()=>{S.set('cfg',{key:$('key').value.trim(),model:$('model').value.trim()||'claude-sonnet-5-5'});alert('Zapisane')};
+const DM={gemini:'gemini-3.5-flash',anthropic:'claude-sonnet-5-5'};
+const HINT={gemini:'Darmowy klucz: aistudio.google.com → Get API key. Szukanie firm w internecie nie działa na darmowym planie — użyj linków w zakładce 2.',anthropic:'Klucz z console.anthropic.com (płatne, ustaw limit wydatków). Działa też szukanie firm w internecie.'};
+const cfg=()=>S.get('cfg',{prov:'gemini',key:'',model:DM.gemini});
+function loadCfg(){const c=cfg();$('prov').value=c.prov||'gemini';$('key').value=c.key||'';$('model').value=c.model||DM[$('prov').value];$('provHint').textContent=HINT[$('prov').value]}
+$('prov').onchange=()=>{$('model').value=DM[$('prov').value];$('provHint').textContent=HINT[$('prov').value]};
+loadCfg();
+$('saveKey').onclick=()=>{S.set('cfg',{prov:$('prov').value,key:$('key').value.trim(),model:$('model').value.trim()||DM[$('prov').value]});alert('Zapisane')};
 async function claude(prompt,web){const c=cfg();if(!c.key){alert('Dodaj klucz API w ⚙️');throw new Error('nokey')}
+ if(c.prov==='gemini'){
+  if(web){alert('Szukanie firm w internecie wymaga klucza Anthropic. Z darmowym Gemini użyj linków w zakładce 2 i dodaj firmy ręcznie.');throw new Error('nokey')}
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(c.model)+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':c.key},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+  const j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+  return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('\n')}
  const body={model:c.model,max_tokens:3000,messages:[{role:'user',content:prompt}]};
  if(web)body.tools=[{type:'web_search_20250305',name:'web_search',max_uses:6}];
  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
