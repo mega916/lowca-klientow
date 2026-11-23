@@ -93,6 +93,16 @@ a{color:var(--g)}
   <div id="links"></div>
  </div>
  <div class="card">
+  <b>🆓 Szukaj przez czat AI (bez API)</b>
+  <p class="hint">1) Kopiujesz polecenie. 2) Wklejasz je do darmowego czatu AI z internetem (Claude, ChatGPT, Gemini). 3) Wklejasz tu jego odpowiedź i importujesz firmy.</p>
+  <label>Ile firm</label><select id="n2"><option>5</option><option selected>8</option><option>12</option></select>
+  <button class="p" id="cpFind">1. Skopiuj polecenie</button>
+  <label>Odpowiedź z czatu (wklej tutaj)</label>
+  <textarea id="paste" placeholder="Wklej całą odpowiedź czatu"></textarea>
+  <button class="s" id="impFind">2. Importuj do leadów</button>
+  <div id="impOut" class="hint"></div>
+ </div>
+ <div class="card">
   <b>✨ Agent szuka firm (AI + internet)</b>
   <p class="hint">Tylko z kluczem Anthropic (płatny) w ⚙️. Z darmowym Gemini użyj linków powyżej. Zwraca firmy z uzasadnieniem — zawsze sprawdź je sam przed kontaktem.</p>
   <label>Ile firm</label>
@@ -122,6 +132,7 @@ a{color:var(--g)}
   </div>
   <button class="p" id="mkTpl">Szablon (offline)</button>
   <button class="s" id="mkAi">✨ Napisz z AI</button>
+  <button class="s" id="cpMsg">🆓 Skopiuj polecenie dla czatu</button>
   <div id="msgOut" class="out" style="display:none"></div>
   <button class="s" id="copy" style="display:none">Kopiuj</button>
   <button class="s" id="markSent" style="display:none">Oznacz jako wysłane</button>
@@ -304,6 +315,18 @@ $('lforgot').onclick=()=>{if(confirm('To usunie profil, leady i klucz API z tej 
 $('chPin').onclick=()=>{S.set('pinh',null);lockUi()};
 $('lockNow').onclick=lockUi;
 lockUi();
+
+// tryb bez API: kopiuj polecenie -> czat AI -> wklej odpowiedź
+async function copyTxt(t,btn){try{await navigator.clipboard.writeText(t);const o=btn.textContent;btn.textContent='Skopiowano ✅';setTimeout(()=>btn.textContent=o,1800)}catch(e){prompt('Skopiuj ręcznie:',t)}}
+$('cpFind').onclick=()=>{if(!need())return;copyTxt(`Znajdź w internecie ${$('n2').value} REALNYCH firm w Polsce pasujących do profilu klienta poniżej. Użyj wyszukiwarki, nie zmyślaj: jeśli czegoś nie znalazłeś, zostaw puste. Podaj tylko firmy, które naprawdę istnieją i mają stronę www. Zwróć WYŁĄCZNIE tablicę JSON obiektów z polami: name, www, person (stanowisko decydenta, jeśli znane), contact (publiczny e-mail/telefon ze strony firmy), why (1 zdanie: dlaczego pasuje, z faktem ze strony). Bez markdown i bez komentarzy.\n\n`+icpText(),$('cpFind'))};
+$('impFind').onclick=()=>{const t=$('paste').value;const m=t.match(/\[[\s\S]*\]/);let arr;try{arr=JSON.parse(m?m[0]:t)}catch(e){$('impOut').textContent='Nie udało się odczytać odpowiedzi. Poproś czat: „zwróć same dane jako tablicę JSON" i wklej ponownie.';return}
+ if(!Array.isArray(arr)||!arr.length){$('impOut').textContent='Brak firm w odpowiedzi.';return}
+ let k=0;arr.forEach(x=>{if(!x||!x.name)return;if(leads.some(l=>l.name.toLowerCase()===String(x.name).toLowerCase()))return;addLead({name:String(x.name),person:x.person||'',contact:x.contact||'',www:x.www||'',why:x.why||''});k++});
+ $('paste').value='';$('impOut').textContent='Dodano '+k+' firm do zakładki „4. Leady". Sprawdź każdą, zanim napiszesz.'};
+$('cpMsg').onclick=()=>{const l=curLead();if(!l)return alert('Dodaj lead');if(!need())return;
+ const ch={mail:'e-mail (z tematem)',li:'wiadomość LinkedIn do 300 znaków',tel:'skrypt rozmowy telefonicznej (30 sekund otwarcia + 2 pytania)'}[$('chan').value];
+ const st=['pierwsza wiadomość','follow-up 1','follow-up 2 (dodaj wartość, np. przykład)','krótka wiadomość pożegnalna'][+$('step').value];
+ copyTxt(`Napisz po polsku: ${ch}, etap: ${st}. Do firmy: ${l.name}; osoba: ${l.person||'nieznana'}; dlaczego pasuje: ${l.why||'brak'}; strona: ${l.www||'brak'}.\nZasady: maks. 120 słów, jeden konkretny problem odbiorcy, zero pustych komplementów i sztampy, jedno proste pytanie na końcu, uczciwa informacja kim jestem, w mailu 1 zdanie jak zrezygnować z kontaktu. Nie wymyślaj faktów o firmie.\nSprzedawca:\n${icpText()}\nZwróć samą treść.`,$('cpMsg'))};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
