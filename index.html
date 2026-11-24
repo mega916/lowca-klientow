@@ -180,7 +180,7 @@ a{color:var(--g)}
 const $=id=>document.getElementById(id);
 const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}if((k==='icp'||k==='leads')&&typeof queueSync==='function')queueSync()}};
 // KONTO (Supabase) — adres i klucz publiczny projektu
-const SB_URL='',SB_KEY='';
+const SB_URL='https://qgvrwjmxkfcgtawhleus.supabase.co',SB_KEY='sb_publishable_QvL4ZzMkf5PxN9gO3YIs7g_MOmpdMbc';
 let sess=S.get('sess',null),syncBlock=false,syncT;
 const DEF={offer:'podwykonawstwo spawalnicze i montażowe instalacji oraz konstrukcji ze stali nierdzewnej (TIG, orbitalne) dla branży spożywczej, mleczarskiej, piwowarskiej i farmaceutycznej',company:'',me:'Piotr',industries:'generalni wykonawcy instalacji procesowych, producenci linii technologicznych dla przemysłu spożywczego, firmy instalacyjne stal nierdzewna, wykonawcy instalacji dla browarów i mleczarni',region:'cała Polska',size:'10–50 osób',roles:'kierownik kontraktu, kierownik projektu, kierownik budowy, dyrektor ds. zakupów, właściciel',pain:'brak wolnych, wykwalifikowanych spawaczy na szczyt zleceń, presja terminów na budowie, wymagana dokumentacja spawalnicza i jakość zgodna z EHEDG/HACCP',proof:'wykonujemy spawanie i montaż rurociągów oraz konstrukcji ze stali nierdzewnej (304/316L, duplex) jako podwykonawca, z dokumentacją i w terminie'};
 let icp=S.get('icp',null);if(!icp){icp={...DEF};S.set('icp',icp)}
