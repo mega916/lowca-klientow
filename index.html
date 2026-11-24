@@ -41,12 +41,13 @@ a{color:var(--g)}
 </style>
 </head>
 <body>
-<div class="lock" id="lock"><div class="box"><h2 id="lt" style="margin:0">🔒 Łowca Klientów</h2><p class="hint" id="lh"></p>
-<input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="••••">
-<input id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="powtórz" style="display:none">
-<div id="le" style="color:var(--r);font-size:14px;min-height:20px"></div>
-<button class="p" id="lgo" style="width:100%;margin:6px 0 0">Wejdź</button>
-<button class="d" id="lforgot" style="margin-top:12px">Zapomniałem PIN (usuwa dane)</button></div></div>
+<div class="lock" id="lock"><div class="box"><h2 style="margin:0">🎯 Łowca Klientów</h2><p class="hint" id="lh">Zaloguj się lub załóż konto</p>
+<input id="em" type="email" autocomplete="email" placeholder="e-mail" style="font-size:16px;letter-spacing:0;margin:8px 0 0">
+<input id="pw" type="password" autocomplete="current-password" placeholder="hasło (min. 6 znaków)" style="font-size:16px;letter-spacing:0;margin:8px 0 0">
+<div id="le" style="color:var(--r);font-size:14px;min-height:22px;margin-top:6px"></div>
+<button class="p" id="bLogin" style="width:100%;margin:4px 0 0">Zaloguj</button>
+<button class="s" id="bReg" style="width:100%;margin:8px 0 0">Załóż konto</button>
+<button class="d" id="bRec" style="margin-top:10px">Zapomniałem hasła</button></div></div>
 <header><h1>🎯 Łowca Klientów B2B</h1><p>Profil klienta → lista firm → wiadomość → follow-upy</p></header>
 <nav id="nav">
  <button data-t="icp" class="on">1. Profil</button>
@@ -165,9 +166,9 @@ a{color:var(--g)}
   <p class="hint">Pierwszy mail do firmy (adres typu biuro@, kontakt@ lub imienny służbowy) jest dopuszczalny jako oferta B2B, ale: podaj kim jesteś i skąd masz dane, daj prosty sposób rezygnacji, nie wysyłaj masowo tej samej treści, nie pisz do osób, które odmówiły. Telefon do firmy — zwykle OK, do osoby prywatnej bez zgody — nie. W razie wątpliwości zapytaj prawnika.</p>
  </div>
  <div class="card">
-  <b>Blokada PIN</b>
-  <p class="hint">PIN chroni przed przypadkowym wejściem na telefonie. To nie szyfrowanie — ktoś z dostępem do przeglądarki i wiedzą techniczną może odczytać dane.</p>
-  <button class="p" id="lockNow">Zablokuj teraz</button><button class="s" id="chPin">Zmień PIN</button>
+  <b>Konto</b>
+  <p class="hint">Zalogowany: <span id="acct">—</span><br><span id="syncSt">Dane tylko na tym urządzeniu (konto nie skonfigurowane).</span></p>
+  <button class="s" id="logout">Wyloguj</button>
  </div>
  <div class="card">
   <button class="d" id="wipe">Usuń wszystkie dane z tej przeglądarki</button>
@@ -177,7 +178,10 @@ a{color:var(--g)}
 
 <script>
 const $=id=>document.getElementById(id);
-const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const S={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}if((k==='icp'||k==='leads')&&typeof queueSync==='function')queueSync()}};
+// KONTO (Supabase) — adres i klucz publiczny projektu
+const SB_URL='',SB_KEY='';
+let sess=S.get('sess',null),syncBlock=false,syncT;
 const DEF={offer:'podwykonawstwo spawalnicze i montażowe instalacji oraz konstrukcji ze stali nierdzewnej (TIG, orbitalne) dla branży spożywczej, mleczarskiej, piwowarskiej i farmaceutycznej',company:'',me:'Piotr',industries:'generalni wykonawcy instalacji procesowych, producenci linii technologicznych dla przemysłu spożywczego, firmy instalacyjne stal nierdzewna, wykonawcy instalacji dla browarów i mleczarni',region:'cała Polska',size:'10–50 osób',roles:'kierownik kontraktu, kierownik projektu, kierownik budowy, dyrektor ds. zakupów, właściciel',pain:'brak wolnych, wykwalifikowanych spawaczy na szczyt zleceń, presja terminów na budowie, wymagana dokumentacja spawalnicza i jakość zgodna z EHEDG/HACCP',proof:'wykonujemy spawanie i montaż rurociągów oraz konstrukcji ze stali nierdzewnej (304/316L, duplex) jako podwykonawca, z dokumentacją i w terminie'};
 let icp=S.get('icp',null);if(!icp){icp={...DEF};S.set('icp',icp)}
 let leads=S.get('leads',[]);
@@ -299,22 +303,27 @@ $('mkAi').onclick=async()=>{const l=curLead();if(!l)return alert('Dodaj lead');i
  showMsg(await claude(`Napisz po polsku: ${ch}, etap: ${st}. Do firmy: ${l.name}; osoba: ${l.person||'nieznana'}; dlaczego pasuje: ${l.why||'brak'}; strona: ${l.www||'brak'}.\nZasady: maks. 120 słów, jeden konkretny problem odbiorcy, zero pustych komplementów i sztampy ("w dzisiejszych czasach"), jedno proste pytanie na końcu, uczciwa informacja kim jestem, w mailu 1 zdanie jak zrezygnować z kontaktu. Nie wymyślaj faktów o firmie.\nSprzedawca:\n${icpText()}\nZwróć samą treść.`))}catch(e){if(e.message!=='nokey')show('msgOut','Błąd: '+e.message)}busy($('mkAi'),false)};
 $('wipe').onclick=()=>{if(confirm('Na pewno usunąć profil, leady i klucz?')){localStorage.clear();location.reload()}};
 
-// PIN
-async function hp(p){const salt='lowca-b2b-v1';try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(salt+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(const c of salt+p)h=((h<<5)+h+c.charCodeAt(0))|0;return 'f'+h}}
-const lock=$('lock');let fails=0,unlocked=false;
-function lockUi(){const has=!!S.get('pinh',null);lock.style.display='flex';$('pin').value='';$('pin2').value='';$('le').textContent='';
- $('pin2').style.display=has?'none':'block';$('lforgot').style.display=has?'inline':'none';
- $('lh').textContent=has?'Wpisz PIN':'Ustaw PIN (4–8 cyfr), który będzie chronił dostęp';$('lgo').textContent=has?'Wejdź':'Ustaw PIN';setTimeout(()=>$('pin').focus(),50)}
-$('lgo').onclick=async()=>{const p=$('pin').value.trim(),has=S.get('pinh',null);
- if(!/^\d{4,8}$/.test(p)){$('le').textContent='PIN: 4–8 cyfr';return}
- if(!has){if(p!==$('pin2').value.trim()){$('le').textContent='PIN-y się różnią';return}S.set('pinh',await hp(p));lock.style.display='none';return}
- if(await hp(p)===has){fails=0;lock.style.display='none';return}
- fails++;$('le').textContent='Zły PIN';if(fails>=3){$('lgo').disabled=true;let t=Math.min(60,fails*5);const iv=setInterval(()=>{$('le').textContent='Odczekaj '+t+' s';if(--t<0){clearInterval(iv);$('lgo').disabled=false;$('le').textContent=''}},1000)}$('pin').value=''};
-$('pin').onkeydown=$('pin2').onkeydown=e=>{if(e.key==='Enter')$('lgo').click()};
-$('lforgot').onclick=()=>{if(confirm('To usunie profil, leady i klucz API z tej przeglądarki. Kontynuować?')){localStorage.clear();location.reload()}};
-$('chPin').onclick=()=>{S.set('pinh',null);lockUi()};
-$('lockNow').onclick=lockUi;
-lockUi();
+// KONTO (Supabase) — adres i klucz publiczny projektu
+const lock=$('lock');
+function setSync(t){const e=$('syncSt');if(e)e.textContent=t}
+async function sbAuth(path,body){const r=await fetch(SB_URL+'/auth/v1/'+path,{method:'POST',headers:{'content-type':'application/json',apikey:SB_KEY},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok){const m=(j.msg||j.error_description||j.error||'').toString();throw new Error(/invalid login/i.test(m)?'Zły e-mail lub hasło':/already/i.test(m)?'Konto z tym e-mailem już istnieje':/not confirmed/i.test(m)?'Najpierw potwierdź e-mail (link w skrzynce)':/password/i.test(m)?'Hasło: min. 6 znaków':m||('Błąd '+r.status))}return j}
+function setSess(j){sess={access:j.access_token,refresh:j.refresh_token,exp:Date.now()+((j.expires_in||3600)-60)*1000,uid:(j.user&&j.user.id)||(sess&&sess.uid),email:(j.user&&j.user.email)||(sess&&sess.email)};S.set('sess',sess)}
+async function token(){if(!sess)return null;if(Date.now()>sess.exp){try{setSess(await sbAuth('token?grant_type=refresh_token',{refresh_token:sess.refresh}))}catch(e){sess=null;S.set('sess',null);lock.style.display='flex';return null}}return sess.access}
+async function sbData(method,body,query){const t=await token();if(!t)throw new Error('nologin');const r=await fetch(SB_URL+'/rest/v1/app_data'+(query||''),{method,headers:{'content-type':'application/json',apikey:SB_KEY,authorization:'Bearer '+t,Prefer:'resolution=merge-duplicates,return=representation'},body:body?JSON.stringify(body):undefined});if(!r.ok)throw new Error('sync '+r.status);return r.json()}
+function queueSync(){if(!SB_URL||!sess||syncBlock)return;clearTimeout(syncT);setSync('⏳ zapisuję…');syncT=setTimeout(push,800)}
+async function push(){try{await sbData('POST',{user_id:sess.uid,icp,leads,updated_at:new Date().toISOString()});setSync('☁️ zapisano w chmurze')}catch(e){setSync('⚠️ brak zapisu w chmurze (offline?)')}}
+async function afterLogin(){lock.style.display='none';$('acct').textContent=sess.email||'';syncBlock=true;let up=false;
+ try{const rows=await sbData('GET',null,'?select=icp,leads&user_id=eq.'+sess.uid);const c=rows[0];
+  if(c){if(c.icp&&Object.keys(c.icp).length)icp=c.icp;leads=c.leads||[];S.set('icp',icp);S.set('leads',leads);ICPF.forEach(f=>{if(icp[f]!=null)$(f).value=icp[f]});setSync('☁️ wczytano z chmury')}else up=true}catch(e){setSync('⚠️ nie udało się wczytać z chmury')}
+ syncBlock=false;if(up)push();renderLeads();fillLeadSel()}
+function lerr(t,ok){$('le').style.color=ok?'var(--g)':'var(--r)';$('le').textContent=t}
+function creds(){const e=$('em').value.trim(),p=$('pw').value;if(!/^\S+@\S+\.\S+$/.test(e)){lerr('Wpisz poprawny e-mail');return null}if(p.length<6){lerr('Hasło: min. 6 znaków');return null}return{email:e,password:p}}
+$('bLogin').onclick=async()=>{const c=creds();if(!c)return;lerr('Loguję…',1);try{setSess(await sbAuth('token?grant_type=password',c));lerr('');afterLogin()}catch(e){lerr(e.message)}};
+$('bReg').onclick=async()=>{const c=creds();if(!c)return;lerr('Zakładam konto…',1);try{const j=await sbAuth('signup',c);if(j.access_token){setSess(j);lerr('');afterLogin()}else lerr('Konto założone. Kliknij link w mailu od nas (sprawdź też SPAM), potem wróć i zaloguj się.',1)}catch(e){lerr(e.message)}};
+$('bRec').onclick=async()=>{const e=$('em').value.trim();if(!/^\S+@\S+\.\S+$/.test(e)){lerr('Wpisz e-mail powyżej');return}try{await sbAuth('recover',{email:e});lerr('Wysłaliśmy link do zmiany hasła na ten e-mail.',1)}catch(x){lerr(x.message)}};
+$('pw').onkeydown=$('em').onkeydown=e=>{if(e.key==='Enter')$('bLogin').click()};
+$('logout').onclick=async()=>{if(!confirm('Wylogować? Dane zostają w chmurze.'))return;try{await push()}catch(e){}sess=null;localStorage.removeItem('sess');localStorage.removeItem('icp');localStorage.removeItem('leads');location.reload()};
+if(SB_URL){if(sess)afterLogin();else lock.style.display='flex'}else{lock.style.display='none'}
 
 // tryb bez API: kopiuj polecenie -> czat AI -> wklej odpowiedź
 async function copyTxt(t,btn){try{await navigator.clipboard.writeText(t);const o=btn.textContent;btn.textContent='Skopiowano ✅';setTimeout(()=>btn.textContent=o,1800)}catch(e){prompt('Skopiuj ręcznie:',t)}}
